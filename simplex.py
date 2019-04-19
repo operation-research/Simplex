@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
-__author__ = "Daniel Kogan"
+__author__ = "Daniel Kogan, Janek Putz"
 
 import logging
 
-class simplex():
+
+class Simplex:
+
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         logging.basicConfig(level=logging.INFO)
@@ -15,16 +17,18 @@ class simplex():
         tableau.append([i for i in c] + [0])
         return tableau
 
+
 if __name__ == "__main__":
-    simplex = simplex()
+
+    simplex = Simplex()
 
     c = [3, 2]
-    A = [[1,2], [1,-1]]
+    A = [[1, 2], [1, -1]]
     b = [4, 1]
 
     # schlupfvariablen hinzufügen
-    A[0] += [1,0]
-    A[1] += [0,1]
+    A[0] += [1, 0]
+    A[1] += [0, 1]
     c += [0, 0]
 
     simplex.logger.info("A matrix: " + str(A))
