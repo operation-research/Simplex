@@ -17,17 +17,18 @@ class SimplexException(Exception):
         super().__init__(message)
 
 
-def init_simplex():
+def init_simplex(simplex):
     """
     initialises simplex with user input
-    :return: simplex object
+    :param simplex: simplex object to store infos
     """
     # input of objective function coefficients
     of_input = input('Enter the objective function coefficients: ')
-    c = [float(value) for value in of_input.split()]
+    simplex.initial_c = [float(value) for value in of_input.split()]
 
     # init constraints
     A = []
+    b = []
     further_constraint = True
 
     while further_constraint:
@@ -48,16 +49,16 @@ def init_simplex():
         # input of coefficients
         coefficients_input = input('Enter the constraints coefficients: ')
         coefficients = [float(value) for value in coefficients_input.split()]
-        if len(coefficients) != len(c):
-            raise SimplexException('Invalid constraint length')
-        constraint = coefficients
+
+        if len(coefficients) != len(simplex.initial_c):
+            print('Invalid constraint length')
+            continue
+
+        A.append(coefficients)
 
         # input b
         b_input = input('Enter the constraints b: ')
-        constraint.append(float(b_input))
+        b.append(float(b_input))
 
-        A.append(constraint)
-
-    simplex = Simplex()
-    simplex.init_tableau(c, A)
-    return simplex
+    simplex.initial_A = A
+    simplex.initial_b_vector = b
