@@ -17,10 +17,22 @@ class SimplexException(Exception):
         super().__init__(message)
 
 
-def init_simplex(simplex):
+def init_simplex_data(simplex):
+    """
+    initialises the simplex' data depending on the development flag
+    :param simplex: simplex object to store data
+    :return:
+    """
+    if simplex.dev is False:
+        simplex_input(simplex)
+    else:
+        simplex_dev_data(simplex)
+
+
+def simplex_input(simplex):
     """
     initialises simplex with user input
-    :param simplex: simplex object to store infos
+    :param simplex: simplex object to store data
     """
     # input of objective function coefficients
     of_input = input('Enter the objective function coefficients: ')
@@ -29,6 +41,7 @@ def init_simplex(simplex):
     # init constraints
     A = []
     b = []
+    i = 1
     further_constraint = True
 
     while further_constraint:
@@ -39,15 +52,17 @@ def init_simplex(simplex):
             further_con_input = input('Further constraints? [Y/N] ')
 
             if further_con_input.lower() == 'y':
-                pass
+                i += 1
             elif further_con_input.lower() == 'n':
                 further_constraint = False
                 continue
             else:
                 continue
 
+        print('%d. constraint' % i)
+
         # input of coefficients
-        coefficients_input = input('Enter the constraints coefficients: ')
+        coefficients_input = input('Coefficients: ')
         coefficients = [float(value) for value in coefficients_input.split()]
 
         if len(coefficients) != len(simplex.initial_c):
@@ -57,8 +72,19 @@ def init_simplex(simplex):
         A.append(coefficients)
 
         # input b
-        b_input = input('Enter the constraints b: ')
+        b_input = input('b: ')
         b.append(float(b_input))
 
     simplex.initial_A = A
     simplex.initial_b_vector = b
+
+
+def simplex_dev_data(simplex):
+    """
+    initialises simplex with static development data
+    :param simplex: simplex object to store data
+    :return:
+    """
+    simplex.initial_A = [[1, 2], [1, -1]]
+    simplex.initial_b = [4, 1]
+    simplex.initial_c = [-3, 2]
