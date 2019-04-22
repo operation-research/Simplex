@@ -85,6 +85,6 @@ def simplex_dev_data(simplex):
     :param simplex: simplex object to store data
     :return:
     """
-    simplex.initial_A = [[1, 2], [1, -1]]
-    simplex.initial_b = [4, 1]
-    simplex.initial_c = [-3, 2]
+    simplex.initial_A = [[-3, -1], [-2, -3], [2, 1]]
+    simplex.initial_b = [-3, -6, 4]
+    simplex.initial_c = [-5, -2]

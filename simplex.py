@@ -32,12 +32,12 @@ class Simplex:
 
         # config logging
         logging.basicConfig(level=logging.INFO)
+        self.logger.info("Initialize Simplex".center(40, '*'))
 
         # initialize and prepare data
         utils.init_simplex_data(self)
         self.add_slack_vars()
         self.init_tableau()
-        self.logger.info("Initialized")
 
     def init_tableau(self):
         """
@@ -47,6 +47,10 @@ class Simplex:
         tableau = [row[:] + [x] for row, x in zip(self.initial_A, self.initial_b)]
         tableau.append([i for i in self.initial_c] + [0])
         self.tableau = tableau
+
+        self.logger.info("Initial tableau:")
+        for row in self.tableau:
+            self.logger.info(row)
 
     def add_slack_vars(self):
         """
@@ -74,7 +78,7 @@ class Simplex:
         <description>
         :return:
         """
-        self.logger.info("Start phase 1")
+        self.logger.info('Start phase 1'.center(40, '*'))
 
     def run_phase_2(self):
         """
@@ -82,15 +86,37 @@ class Simplex:
         <description>
         :return:
         """
-        self.logger.info("Start phase 2")
+        self.logger.info('Start phase 2'.center(40, '*'))
 
         # if not at least one negative coefficient is found in the objective functions the algorithm terminates
-        if self.check_c_negatives():
-            pass
+        if self.check_negative_c():
+
+            pivot_col = self.get_pivot_col()
+            self.logger.info('Pivot column: %d' % pivot_col)
+            pivot_row = self.get_pivot_row()
+            self.logger.info('Pivot row: %d' % pivot_row)
+
         else:
             print('Algorithm terminates')
 
-    def check_c_negatives(self):
+    def get_pivot_col(self):
+        """
+        provide the pivot columns index
+        identify the lowest coefficient in the objective function
+        :return: pivot column index
+        """
+        return self.tableau[-1].index(min(self.tableau[-1]))
+
+    def get_pivot_row(self):
+        """
+        provide the pivot rows index
+        calculate the quotient of pivot column coefficient and b, identify the minimum
+        :return:
+        """
+        quotients = [con[self.get_pivot_col()] / con[-1] for con in self.tableau[:-1]]
+        return quotients.index(min(quotients))
+
+    def check_negative_c(self):
         """
         check for at least one negative coefficient in the objective function
         :return:
@@ -107,6 +133,3 @@ if __name__ == "__main__":
     simplex = Simplex(dev=True)
     simplex.run()
 
-    simplex.logger.info("Initial tableau:")
-    for row in simplex.tableau:
-        simplex.logger.info(row)
