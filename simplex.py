@@ -57,12 +57,12 @@ class Simplex:
         add slack variables to the constraint matrix
         :return:
         """
+        self.initial_c += [0] * (len(self.initial_A[0]) + 1)
+
         for idx, constraint in enumerate(self.initial_A):
             slack_var = [0] * len(self.initial_A)
             slack_var[idx] = 1
             self.initial_A[idx] += slack_var
-
-        # self.initial_c += [0] * len(self.initial_A)
 
     def run(self):
         """
@@ -89,7 +89,7 @@ class Simplex:
         self.logger.info('Start phase 2'.center(40, '*'))
 
         # if not at least one negative coefficient is found in the objective functions the algorithm terminates
-        if self.check_negative_c():
+        if len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
 
             pivot_col = self.get_pivot_col()
             self.logger.info('Pivot column: %d' % pivot_col)
@@ -115,17 +115,6 @@ class Simplex:
         """
         quotients = [con[self.get_pivot_col()] / con[-1] for con in self.tableau[:-1]]
         return quotients.index(min(quotients))
-
-    def check_negative_c(self):
-        """
-        check for at least one negative coefficient in the objective function
-        :return:
-        """
-        c = self.tableau[-1]
-        for coefficient in c:
-            if coefficient < 0:
-                return True
-        return False
 
 
 if __name__ == "__main__":
