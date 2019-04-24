@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import logging
 import utils
+import numpy as np
 
 __author__ = "Daniel Kogan, Janek Putz"
 
@@ -10,7 +11,7 @@ class Simplex:
     Simplex algorithm
 
     Attributes:
-        dev(Boolean): development flag
+        data_set(int): number of dev data set
         logger(Logger): logger
         tableau([]): simplex tableau
         initial_A([[]]): initial constraint matrix
@@ -18,12 +19,12 @@ class Simplex:
         initial_c([]): initial c vector
     """
 
-    def __init__(self, dev=False):
+    def __init__(self, data_set=None):
         """
         setup object
-        :param dev: development flag
+        :param data_set: number of dev data set
         """
-        self.dev = dev
+        self.data_set = data_set
         self.logger = logging.getLogger(self.__class__.__name__)
         self.tableau = None
         self.initial_A = None
@@ -35,7 +36,7 @@ class Simplex:
         self.logger.info("Initialize Simplex".center(60, '*'))
 
         # initialize and prepare data
-        utils.init_simplex_data(self)
+        utils.init_simplex_data(self, data_set)
         self.add_slack_vars()
         self.init_tableau()
 
@@ -56,7 +57,7 @@ class Simplex:
         add slack variables to the constraint matrix
         :return:
         """
-        self.initial_c += [0] * (len(self.initial_A[0]) + 1)
+        self.initial_c += [0] * (len(self.initial_A) + 1)
 
         for idx, constraint in enumerate(self.initial_A):
             slack_var = [0] * len(self.initial_A)
@@ -102,6 +103,8 @@ class Simplex:
         <description>
         :return:
         """
+        base_point = self.get_base_point()
+        self.logger.info('Initial base point: %s' % base_point)
         self.logger.info('Start phase 2'.center(60, '*'))
         i = 1
 
@@ -111,10 +114,12 @@ class Simplex:
             self.logger.info(('%d. Iteration' % i).center(40, '-'))
             self.base_exchange()
             self.log_tableau()
-            self.get_base_point()
+            base_point = self.get_base_point()
+            self.logger.info('Base point: %s' % base_point)
             i += 1
 
         self.logger.info('Algorithm terminates'.center(40, '-'))
+        self.logger.info('Optimal base point: ' + str(base_point))
 
     def get_pivot_col_idx(self):
         """
@@ -154,20 +159,41 @@ class Simplex:
                 for j, a in enumerate(self.tableau[i]):
                     self.tableau[i][j] = a - (pc_a * self.tableau[pr_idx][j])
 
-    def log_tableau(self):
-        for row in self.tableau:
-            self.logger.info(row)
-
     def get_base_point(self):
         """
         compose the the base point
         :return: base point as list
         """
-        pass
+        base_point = []
+        col_count = len(self.tableau[0])
+        b_vector = self.get_col(col_count - 1)
+
+        for col_idx in range(0, col_count - 1):
+            # if column contains coefficients of a slack var
+            if self.tableau[-1][col_idx] == 0:
+                col = self.get_col(col_idx)
+                base_point.append(b_vector[col.index(max(col))])
+            else:
+                base_point.append(0)
+
+        return base_point
+
+    def get_col(self, index):
+        col = []
+        for row in self.tableau:
+            for idx, x in enumerate(row):
+                if idx == index:
+                    col.append(x)
+
+        return col
+
+    def log_tableau(self):
+        for row in self.tableau:
+            self.logger.info(row)
 
 
 if __name__ == "__main__":
 
-    simplex = Simplex(dev=True)
+    simplex = Simplex(data_set=2)
     simplex.run()
 

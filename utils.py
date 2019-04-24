@@ -17,16 +17,17 @@ class SimplexException(Exception):
         super().__init__(message)
 
 
-def init_simplex_data(simplex):
+def init_simplex_data(simplex, data_set):
     """
     initialises the simplex' data depending on the development flag
     :param simplex: simplex object to store data
+    :param data_set: test data_set key
     :return:
     """
-    if simplex.dev is False:
+    if simplex.data_set is None:
         simplex_input(simplex)
     else:
-        simplex_dev_data2(simplex)
+        simplex_dev_data(simplex, data_set)
 
 
 def simplex_input(simplex):
@@ -79,22 +80,23 @@ def simplex_input(simplex):
     simplex.initial_b_vector = b
 
 
-def simplex_dev_data(simplex):
+def simplex_dev_data(simplex, data_set):
     """
     initialises simplex with static development data
     :param simplex: simplex object to store data
+    :param data_set: key of data_set
     :return:
     """
-    simplex.initial_A = [[-3, -1], [-2, -3], [2, 1]]
-    simplex.initial_b = [-3, -6, 4]
-    simplex.initial_c = [-5, -2]
 
-def simplex_dev_data2(simplex):
-    """
-    initialises simplex with static development data
-    :param simplex: simplex object to store data
-    :return:
-    """
-    simplex.initial_A = [[16, 6], [4, 12]]
-    simplex.initial_b = [252, 168]
-    simplex.initial_c = [150, 100]
+    if data_set == 1:
+        simplex.initial_A = [[-3, -1], [-2, -3], [2, 1]]
+        simplex.initial_b = [-3, -6, 4]
+        simplex.initial_c = [-5, -2]
+    elif data_set == 2:
+        simplex.initial_A = [[16, 6], [4, 12]]
+        simplex.initial_b = [252, 168]
+        simplex.initial_c = [150, 100]
+    elif data_set == 3:
+        simplex.initial_A = [[5, 2], [1, 5], [6, 6]]
+        simplex.initial_b = [24, 24, 36]
+        simplex.initial_c = [500, 800]
