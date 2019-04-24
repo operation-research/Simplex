@@ -32,7 +32,7 @@ class Simplex:
 
         # config logging
         logging.basicConfig(level=logging.INFO)
-        self.logger.info("Initialize Simplex".center(40, '*'))
+        self.logger.info("Initialize Simplex".center(60, '*'))
 
         # initialize and prepare data
         utils.init_simplex_data(self)
@@ -49,7 +49,7 @@ class Simplex:
         self.tableau = tableau
 
         self.logger.info("Initial tableau:")
-        self.print_tableau()
+        self.log_tableau()
 
     def add_slack_vars(self):
         """
@@ -77,7 +77,7 @@ class Simplex:
         <description>
         :return:
         """
-        self.logger.info('Start phase 1'.center(40, '*'))
+        self.logger.info('Start phase 1'.center(60, '*'))
 
         negative_b_row_indices = []
         for idx, con in enumerate(self.tableau[:-1]):
@@ -102,32 +102,21 @@ class Simplex:
         <description>
         :return:
         """
-        self.logger.info('Start phase 2'.center(40, '*'))
+        self.logger.info('Start phase 2'.center(60, '*'))
+        i = 1
 
-        # if not at least one positive coefficient is found in the objective functions the algorithm terminates
-        if len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
+        # if not at least one negative coefficient is found in the objective functions the algorithm terminates
+        while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
 
-            pivot_col = self.get_pivot_col()
-            self.logger.info('Pivot column: %d' % pivot_col)
-            pivot_row = self.get_pivot_row()
-            self.logger.info('Pivot row: %d' % pivot_row)
+            self.logger.info(('%d. Iteration' % i).center(40, '-'))
+            self.base_exchange()
+            self.log_tableau()
+            self.get_base_point()
+            i += 1
 
-            pivot_element = self.tableau[pivot_row][pivot_col]
+        self.logger.info('Algorithm terminates'.center(40, '-'))
 
-            self.tableau[pivot_row] = [x / pivot_element for x in self.tableau[pivot_row]]
-
-            for i, row in enumerate(self.tableau):
-                if i != pivot_row:
-                    for j, a in enumerate(self.tableau[i]):
-                        self.tableau[i][j] = a - (self.tableau[i][j] * self.tableau[pivot_row][j])
-
-            self.print_tableau()
-
-
-        else:
-            print('Algorithm terminates')
-
-    def get_pivot_col(self):
+    def get_pivot_col_idx(self):
         """
         provide the pivot columns index
         identify the lowest coefficient in the objective function
@@ -135,19 +124,46 @@ class Simplex:
         """
         return self.tableau[-1].index(min(self.tableau[-1]))
 
-    def get_pivot_row(self):
+    def get_pivot_row_idx(self):
         """
         provide the pivot rows index
         calculate the quotient of pivot column coefficient and b, identify the minimum
         :return:
         """
-        quotients = [con[-1] / con[self.get_pivot_col()] for con in self.tableau[:-1]]
+        quotients = [con[-1] / con[self.get_pivot_col_idx()] for con in self.tableau[:-1]]
         # print(quotients)
         return quotients.index(min(quotients))
 
-    def print_tableau(self):
+    def base_exchange(self):
+        """
+        perform a base exchange
+        :return:
+        """
+        pc_idx = self.get_pivot_col_idx()
+        self.logger.info('Pivot column: %d' % pc_idx)
+        pr_idx = self.get_pivot_row_idx()
+        self.logger.info('Pivot row: %d' % pr_idx)
+        pe = self.tableau[pr_idx][pc_idx]
+        self.logger.info('Pivot element: %d' % pe)
+
+        self.tableau[pr_idx] = [a / pe for a in self.tableau[pr_idx]]
+
+        for i, row in enumerate(self.tableau):
+            if i != pr_idx:
+                pc_a = self.tableau[i][pc_idx]
+                for j, a in enumerate(self.tableau[i]):
+                    self.tableau[i][j] = a - (pc_a * self.tableau[pr_idx][j])
+
+    def log_tableau(self):
         for row in self.tableau:
             self.logger.info(row)
+
+    def get_base_point(self):
+        """
+        compose the the base point
+        :return: base point as list
+        """
+        pass
 
 
 if __name__ == "__main__":
