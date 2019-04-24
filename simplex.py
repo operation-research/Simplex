@@ -45,12 +45,11 @@ class Simplex:
         :return:
         """
         tableau = [row[:] + [x] for row, x in zip(self.initial_A, self.initial_b)]
-        tableau.append([i for i in self.initial_c] + [0])
+        tableau.append([i * (-1) for i in self.initial_c])
         self.tableau = tableau
 
         self.logger.info("Initial tableau:")
-        for row in self.tableau:
-            self.logger.info(row)
+        self.print_tableau()
 
     def add_slack_vars(self):
         """
@@ -69,7 +68,7 @@ class Simplex:
         runs the simplex algorithm
         :return:
         """
-        self.run_phase_1()
+        # self.run_phase_1()
         self.run_phase_2()
 
     def run_phase_1(self):
@@ -80,6 +79,23 @@ class Simplex:
         """
         self.logger.info('Start phase 1'.center(40, '*'))
 
+        negative_b_row_indices = []
+        for idx, con in enumerate(self.tableau[:-1]):
+            if con[-1] < 0:
+                negative_b_row_indices.append(idx)
+
+        print(negative_b_row_indices)
+
+        if len(negative_b_row_indices) > 0:
+            # oEdA die erste Zeile nehmen -> x1 geht in die basis
+            new_constraint = self.tableau[0]
+            new_constraint[1:-1] = [-a for a in new_constraint[1:-1]]
+            new_constraint = [a / self.tableau[0][0] for a in self.tableau[0]]
+            print(new_constraint)
+
+        else:
+            pass
+
     def run_phase_2(self):
         """
         run the second phase of the algorithm
@@ -88,13 +104,25 @@ class Simplex:
         """
         self.logger.info('Start phase 2'.center(40, '*'))
 
-        # if not at least one negative coefficient is found in the objective functions the algorithm terminates
+        # if not at least one positive coefficient is found in the objective functions the algorithm terminates
         if len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
 
             pivot_col = self.get_pivot_col()
             self.logger.info('Pivot column: %d' % pivot_col)
             pivot_row = self.get_pivot_row()
             self.logger.info('Pivot row: %d' % pivot_row)
+
+            pivot_element = self.tableau[pivot_row][pivot_col]
+
+            self.tableau[pivot_row] = [x / pivot_element for x in self.tableau[pivot_row]]
+
+            for i, row in enumerate(self.tableau):
+                if i != pivot_row:
+                    for j, a in enumerate(self.tableau[i]):
+                        self.tableau[i][j] = a - (self.tableau[i][j] * self.tableau[pivot_row][j])
+
+            self.print_tableau()
+
 
         else:
             print('Algorithm terminates')
@@ -113,8 +141,13 @@ class Simplex:
         calculate the quotient of pivot column coefficient and b, identify the minimum
         :return:
         """
-        quotients = [con[self.get_pivot_col()] / con[-1] for con in self.tableau[:-1]]
+        quotients = [con[-1] / con[self.get_pivot_col()] for con in self.tableau[:-1]]
+        # print(quotients)
         return quotients.index(min(quotients))
+
+    def print_tableau(self):
+        for row in self.tableau:
+            self.logger.info(row)
 
 
 if __name__ == "__main__":

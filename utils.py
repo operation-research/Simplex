@@ -26,7 +26,7 @@ def init_simplex_data(simplex):
     if simplex.dev is False:
         simplex_input(simplex)
     else:
-        simplex_dev_data(simplex)
+        simplex_dev_data2(simplex)
 
 
 def simplex_input(simplex):
@@ -88,3 +88,13 @@ def simplex_dev_data(simplex):
     simplex.initial_A = [[-3, -1], [-2, -3], [2, 1]]
     simplex.initial_b = [-3, -6, 4]
     simplex.initial_c = [-5, -2]
+
+def simplex_dev_data2(simplex):
+    """
+    initialises simplex with static development data
+    :param simplex: simplex object to store data
+    :return:
+    """
+    simplex.initial_A = [[16, 6], [4, 12]]
+    simplex.initial_b = [252, 168]
+    simplex.initial_c = [150, 100]
