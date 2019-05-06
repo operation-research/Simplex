@@ -3,7 +3,7 @@ import logging
 import utils
 import numpy as np
 
-__author__ = "Daniel Kogan, Janek Putz"
+__author__ = "Daniel Kogan, Janek Putz, Tuananh Vu"
 
 
 class Simplex:
@@ -69,7 +69,7 @@ class Simplex:
         runs the simplex algorithm
         :return:
         """
-        # self.run_phase_1()
+        self.run_phase_1()
         self.run_phase_2()
 
     def run_phase_1(self):
@@ -78,24 +78,97 @@ class Simplex:
         <description>
         :return:
         """
-        self.logger.info('Start phase 1'.center(60, '*'))
+        base_swap_counter = 0
+        opt_reached = False
+        
+        while(opt_reached == False): 
+            self.logger.info('Start phase 1'.center(60, '*'))
 
-        negative_b_row_indices = []
-        for idx, con in enumerate(self.tableau[:-1]):
-            if con[-1] < 0:
-                negative_b_row_indices.append(idx)
+            #Basispunkt (-b Spalte) zulässig oder nicht? GZSZ
+            gute_zeilen = []
+            schlechte_zeilen = []
+            for row in self.tableau[:-1]:
+                if row[-1] > 0:
+                    gute_zeilen.append(row)
+                else:
+                    schlechte_zeilen.append(row)
 
-        print(negative_b_row_indices)
+            #Fall 1: Wenn zul. Menge leer --> Algorithmus terminiert
+            m_leer = False
+            for row in schlechte_zeilen:
+                for n in row[:-len(self.tableau)]:
+                    if n >= 0:
+                        m_leer = True
+                    else:
+                        m_leer = False
+                if m_leer == True:
+                    print("Algorithmus terminiert...")
+                    exit();
 
-        if len(negative_b_row_indices) > 0:
-            # oEdA die erste Zeile nehmen -> x1 geht in die basis
-            new_constraint = self.tableau[0]
-            new_constraint[1:-1] = [-a for a in new_constraint[1:-1]]
-            new_constraint = [a / self.tableau[0][0] for a in self.tableau[0]]
-            print(new_constraint)
+            #Fall 2:
+            s_zeile = schlechte_zeilen[-1] #Warum die Zeile?
+            g_zeile = gute_zeilen[-1]
 
-        else:
-            pass
+            #Kleinster Quotient b/apk0
+            sm_quot = pow;
+            if (s_zeile[-1]/s_zeile[0]) < (g_zeile[-1]/g_zeile[0]):
+                sm_quot = self.tableau[:-1].index(s_zeile)
+            else:
+                sm_quot = self.tableau[:-1].index(g_zeile)
+            
+
+            #Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
+            neg_var = pow; 
+            for i,n in enumerate(s_zeile[:-1]):
+                if n < 0:
+                    neg_var = i;
+                    break;
+
+            #Nach x aufgelöst  boah ist des richtig?
+            self.tableau[sm_quot] = [n/self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
+
+            zw_zeile = [0] * len(self.tableau[sm_quot])
+            zw_zeile[-1] = self.tableau[sm_quot][-1]
+            for i,n in enumerate(self.tableau[sm_quot][:-1]):
+                if i != neg_var:
+                    zw_zeile[i] = zw_zeile[i] - self.tableau[sm_quot][i]
+
+
+            #Für X einsetzen in restliche Zeilen
+            for row in self.tableau:
+                if row != self.tableau[sm_quot]:
+                    zw_zeile1 = [num*row[neg_var] for num in zw_zeile]
+                    row[-1] = row[-1] - zw_zeile1[-1]
+                    row[neg_var] = 0
+                    for i,n in enumerate(row[:-1]):
+                        row[i] = row[i] + zw_zeile1[i]
+
+            #neg_var tritt in Basis ein
+            for n in range(len(self.initial_A)-1, len(self.tableau[0])-1):
+                if self.tableau[sm_quot][n] != 0:
+                    for row in self.tableau:
+                        swap = row[neg_var]
+                        row[neg_var] = row[n]
+                        row[n] = swap
+                    break;
+
+            base_swap_counter += 1
+
+            for row in self.tableau:
+                print(row)
+
+
+            print("\n")
+            base_point = self.get_base_point()
+            print(base_point)
+
+            for n in self.tableau[-1][:len(self.initial_A)-1]:
+                if (n < 0) & (base_swap_counter == len(self.initial_A)-1):
+                    opt_reached = True;
+                else:
+                    opt_reached = False;
+                    
+
 
     def run_phase_2(self):
         """
@@ -103,23 +176,23 @@ class Simplex:
         <description>
         :return:
         """
-        base_point = self.get_base_point()
-        self.logger.info('Initial base point: %s' % base_point)
-        self.logger.info('Start phase 2'.center(60, '*'))
-        i = 1
+        # base_point = self.get_base_point()
+        # self.logger.info('Initial base point: %s' % base_point)
+        # self.logger.info('Start phase 2'.center(60, '*'))
+        # i = 1
 
-        # if not at least one negative coefficient is found in the objective functions the algorithm terminates
-        while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
+        # # if not at least one negative coefficient is found in the objective functions the algorithm terminates
+        # while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
 
-            self.logger.info(('%d. Iteration' % i).center(40, '-'))
-            self.base_exchange()
-            self.log_tableau()
-            base_point = self.get_base_point()
-            self.logger.info('Base point: %s' % base_point)
-            i += 1
+        #     self.logger.info(('%d. Iteration' % i).center(40, '-'))
+        #     self.base_exchange()
+        #     self.log_tableau()
+        #     base_point = self.get_base_point()
+        #     self.logger.info('Base point: %s' % base_point)
+        #     i += 1
 
-        self.logger.info('Algorithm terminates'.center(40, '-'))
-        self.logger.info('Optimal base point: ' + str(base_point))
+        # self.logger.info('Algorithm terminates'.center(40, '-'))
+        # self.logger.info('Optimal base point: ' + str(base_point))
 
     def get_pivot_col_idx(self):
         """
@@ -194,6 +267,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=2)
+    simplex = Simplex(data_set=1)
     simplex.run()
 
