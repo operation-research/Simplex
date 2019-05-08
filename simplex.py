@@ -27,6 +27,7 @@ class Simplex:
         self.data_set = data_set
         self.logger = logging.getLogger(self.__class__.__name__)
         self.tableau = None
+        self.vars = []
         self.initial_A = None
         self.initial_b = None
         self.initial_c = None
@@ -59,10 +60,16 @@ class Simplex:
         """
         self.initial_c += [0] * (len(self.initial_A) + 1)
 
+        for idx,n in enumerate(self.initial_A[0]):
+            self.vars.append("x" + str(idx+1))
+
         for idx, constraint in enumerate(self.initial_A):
             slack_var = [0] * len(self.initial_A)
             slack_var[idx] = 1
             self.initial_A[idx] += slack_var
+            self.vars.append("u" + str(idx+1))
+        
+        self.vars.append("b")
 
     def run(self):
         """
@@ -70,7 +77,7 @@ class Simplex:
         :return:
         """
         self.run_phase_1()
-        self.run_phase_2()
+        #self.run_phase_2()
 
     def run_phase_1(self):
         """
@@ -78,13 +85,13 @@ class Simplex:
         <description>
         :return:
         """
-        base_swap_counter = 0
+        self.logger.info('Start phase 1'.center(60, '*'))
+
         opt_reached = False
         
         while(opt_reached == False): 
-            self.logger.info('Start phase 1'.center(60, '*'))
 
-            #Basispunkt (-b Spalte) zulässig oder nicht? GZSZ
+            #GZSZ
             gute_zeilen = []
             schlechte_zeilen = []
             for row in self.tableau[:-1]:
@@ -102,7 +109,7 @@ class Simplex:
                     else:
                         m_leer = False
                 if m_leer == True:
-                    print("Algorithmus terminiert...")
+                    self.logger.info("Algorithmus terminiert...")
                     exit();
 
             #Fall 2:
@@ -124,7 +131,7 @@ class Simplex:
                     neg_var = i;
                     break;
 
-            #Nach x aufgelöst  boah ist des richtig?
+            #Nach x aufgelöst
             self.tableau[sm_quot] = [n/self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
 
             zw_zeile = [0] * len(self.tableau[sm_quot])
@@ -150,23 +157,33 @@ class Simplex:
                         swap = row[neg_var]
                         row[neg_var] = row[n]
                         row[n] = swap
+                    swap_index = n    
                     break;
+            
+            #Variablentausch
+            var = self.vars[neg_var]
+            self.vars[neg_var] = self.vars[n]
+            self.vars[n] = var
 
-            base_swap_counter += 1
-
+            self.logger.info(self.vars)
             for row in self.tableau:
-                print(row)
+                self.logger.info(row)
 
 
-            print("\n")
+            self.logger.info("\n")
+            #Basispunkt
             base_point = self.get_base_point()
-            print(base_point)
 
-            for n in self.tableau[-1][:len(self.initial_A)-1]:
-                if (n < 0) & (base_swap_counter == len(self.initial_A)-1):
+
+            for n in self.tableau[-1][:-1]:
+                if (n <= 0):
                     opt_reached = True;
+                    for num in base_point: #Kann man besser machen
+                        if (num < 0):
+                            opt_reached = False;
                 else:
                     opt_reached = False;
+                    
                     
 
 
@@ -176,23 +193,23 @@ class Simplex:
         <description>
         :return:
         """
-        # base_point = self.get_base_point()
-        # self.logger.info('Initial base point: %s' % base_point)
-        # self.logger.info('Start phase 2'.center(60, '*'))
-        # i = 1
+        base_point = self.get_base_point()
+        self.logger.info('Initial base point: %s' % base_point)
+        self.logger.info('Start phase 2'.center(60, '*'))
+        i = 1
 
-        # # if not at least one negative coefficient is found in the objective functions the algorithm terminates
-        # while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
+        # if not at least one negative coefficient is found in the objective functions the algorithm terminates
+        while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
 
-        #     self.logger.info(('%d. Iteration' % i).center(40, '-'))
-        #     self.base_exchange()
-        #     self.log_tableau()
-        #     base_point = self.get_base_point()
-        #     self.logger.info('Base point: %s' % base_point)
-        #     i += 1
+            self.logger.info(('%d. Iteration' % i).center(40, '-'))
+            self.base_exchange()
+            self.log_tableau()
+            base_point = self.get_base_point()
+            self.logger.info('Base point: %s' % base_point)
+            i += 1
 
-        # self.logger.info('Algorithm terminates'.center(40, '-'))
-        # self.logger.info('Optimal base point: ' + str(base_point))
+        self.logger.info('Algorithm terminates'.center(40, '-'))
+        self.logger.info('Optimal base point: ' + str(base_point))
 
     def get_pivot_col_idx(self):
         """
@@ -209,7 +226,7 @@ class Simplex:
         :return:
         """
         quotients = [con[-1] / con[self.get_pivot_col_idx()] for con in self.tableau[:-1]]
-        # print(quotients)
+        # self.logger.info(quotients)
         return quotients.index(min(quotients))
 
     def base_exchange(self):

@@ -88,7 +88,7 @@ def simplex_dev_data(simplex, data_set):
     :return:
     """
 
-    if data_set == 1:
+    if data_set == 1: #Todorov Skript
         simplex.initial_A = [[-3, -1], [-2, -3], [2, 1]]
         simplex.initial_b = [-3, -6, 4]
         simplex.initial_c = [-5, -2]
@@ -96,7 +96,15 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_A = [[16, 6], [4, 12]]
         simplex.initial_b = [252, 168]
         simplex.initial_c = [150, 100]
-    elif data_set == 3:
+    elif data_set == 3: #Mathebibel Nicola
         simplex.initial_A = [[5, 2], [1, 5], [6, 6]]
         simplex.initial_b = [24, 24, 36]
         simplex.initial_c = [500, 800]
+    elif data_set == 4: #Marie
+        simplex.initial_A = [[4, 3], [4, 1], [4, 2]]
+        simplex.initial_b = [12, 8, 8]
+        simplex.initial_c = [2, 1]
+    elif data_set == 5: #Erstes Beispiel
+        simplex.initial_A = [[-1, 1], [2, -3], [2, 3]]
+        simplex.initial_b = [2, 3, 12]
+        simplex.initial_c = [3, 5]
