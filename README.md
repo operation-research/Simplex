@@ -1,2 +1,2 @@
 # Simplex
-APK 1 - Simplex algorithm implementation
+Gruppe 4 - APK1: Simplex algorithm implementation

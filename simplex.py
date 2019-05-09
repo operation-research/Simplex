@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import logging
 import utils
-import numpy as np
 
 __author__ = "Daniel Kogan, Janek Putz, Tuananh Vu"
 
@@ -49,9 +48,8 @@ class Simplex:
         tableau = [row[:] + [x] for row, x in zip(self.initial_A, self.initial_b)]
         tableau.append([i * (-1) for i in self.initial_c])
         self.tableau = tableau
-
         self.logger.info("Initial tableau:")
-        self.log_tableau()
+        utils.log_tableau(self)
 
     def add_slack_vars(self):
         """
@@ -60,7 +58,7 @@ class Simplex:
         """
         self.initial_c += [0] * (len(self.initial_A) + 1)
 
-        for idx,n in enumerate(self.initial_A[0]):
+        for idx, n in enumerate(self.initial_A[0]):
             self.vars.append("x" + str(idx+1))
 
         for idx, constraint in enumerate(self.initial_A):
@@ -76,63 +74,48 @@ class Simplex:
         runs the simplex algorithm
         :return:
         """
-        self.run_phase_1()
-        #self.run_phase_2()
+        if len(list(filter(lambda x: x < 0, self.initial_b))) > 0:
+            self.phase_1()
+        else:
+            self.phase_2()
 
-    def run_phase_1(self):
+    def phase_1(self):
         """
         run the first phase of the algorithm
         <description>
         :return:
         """
         self.logger.info('Start phase 1'.center(60, '*'))
-
         opt_reached = False
-        
-        while(opt_reached == False): 
 
-            #GZSZ
-            gute_zeilen = []
-            schlechte_zeilen = []
-            for row in self.tableau[:-1]:
-                if row[-1] > 0:
-                    gute_zeilen.append(row)
-                else:
-                    schlechte_zeilen.append(row)
+        while opt_reached is False:
 
-            #Fall 1: Wenn zul. Menge leer --> Algorithmus terminiert
-            m_leer = False
+            # GZSZ
+            gute_zeilen = [row for row in self.tableau[:-1] if row[-1] >= 0]
+            schlechte_zeilen = [row for row in self.tableau[:-1] if row[-1] < 0]
+
+            # Fall 1: Wenn zul. Menge leer --> Algorithmus terminiert
             for row in schlechte_zeilen:
-                for n in row[:-len(self.tableau)]:
-                    if n >= 0:
-                        m_leer = True
-                    else:
-                        m_leer = False
-                if m_leer == True:
+                if utils.get_neg_value_number(row[:-len(self.tableau)]) <= 0:
                     self.logger.info("Algorithmus terminiert...")
-                    exit();
+                    exit()
 
-            #Fall 2:
-            s_zeile = schlechte_zeilen[-1] #Warum die Zeile?
+            # Fall 2:
+            s_zeile = schlechte_zeilen[-1]  # Warum die Zeile?
             g_zeile = gute_zeilen[-1]
 
-            #Kleinster Quotient b/apk0
-            sm_quot = pow;
-            if (s_zeile[-1]/s_zeile[0]) < (g_zeile[-1]/g_zeile[0]):
-                sm_quot = self.tableau[:-1].index(s_zeile)
-            else:
-                sm_quot = self.tableau[:-1].index(g_zeile)
-            
+            # Kleinster Quotient b/apk0
+            sm_quot = self.tableau[:-1].index(s_zeile if (s_zeile[-1]/s_zeile[0]) < (g_zeile[-1]/g_zeile[0]) else g_zeile)
 
-            #Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
-            neg_var = pow; 
-            for i,n in enumerate(s_zeile[:-1]):
+            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
+            neg_var = None
+            for i, n in enumerate(s_zeile[:-1]):
                 if n < 0:
-                    neg_var = i;
-                    break;
+                    neg_var = i
+                    break
 
-            #Nach x aufgelöst
-            self.tableau[sm_quot] = [n/self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
+            # Nach x aufgelöst
+            self.tableau[sm_quot] = [n / self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
 
             zw_zeile = [0] * len(self.tableau[sm_quot])
             zw_zeile[-1] = self.tableau[sm_quot][-1]
@@ -140,8 +123,7 @@ class Simplex:
                 if i != neg_var:
                     zw_zeile[i] = zw_zeile[i] - self.tableau[sm_quot][i]
 
-
-            #Für X einsetzen in restliche Zeilen
+            # Für X einsetzen in restliche Zeilen
             for row in self.tableau:
                 if row != self.tableau[sm_quot]:
                     zw_zeile1 = [num*row[neg_var] for num in zw_zeile]
@@ -150,7 +132,7 @@ class Simplex:
                     for i,n in enumerate(row[:-1]):
                         row[i] = row[i] + zw_zeile1[i]
 
-            #neg_var tritt in Basis ein
+            # neg_var tritt in Basis ein
             for n in range(len(self.initial_A)-1, len(self.tableau[0])-1):
                 if self.tableau[sm_quot][n] != 0:
                     for row in self.tableau:
@@ -158,9 +140,9 @@ class Simplex:
                         row[neg_var] = row[n]
                         row[n] = swap
                     swap_index = n    
-                    break;
+                    break
             
-            #Variablentausch
+            # Variablentausch
             var = self.vars[neg_var]
             self.vars[neg_var] = self.vars[n]
             self.vars[n] = var
@@ -169,25 +151,20 @@ class Simplex:
             for row in self.tableau:
                 self.logger.info(row)
 
-
             self.logger.info("\n")
-            #Basispunkt
+            # Basispunkt
             base_point = self.get_base_point()
 
-
             for n in self.tableau[-1][:-1]:
-                if (n <= 0):
-                    opt_reached = True;
-                    for num in base_point: #Kann man besser machen
-                        if (num < 0):
-                            opt_reached = False;
+                if n <= 0:
+                    opt_reached = True
+                    for num in base_point:  # Kann man besser machen
+                        if num < 0:
+                            opt_reached = False
                 else:
-                    opt_reached = False;
-                    
-                    
+                    opt_reached = False
 
-
-    def run_phase_2(self):
+    def phase_2(self):
         """
         run the second phase of the algorithm
         <description>
@@ -195,39 +172,26 @@ class Simplex:
         """
         base_point = self.get_base_point()
         self.logger.info('Initial base point: %s' % base_point)
+        of_value = self.tableau[-1][-1]
+        self.logger.info('Initial objective function value: %d' % of_value)
         self.logger.info('Start phase 2'.center(60, '*'))
         i = 1
 
         # if not at least one negative coefficient is found in the objective functions the algorithm terminates
-        while len(list(filter(lambda x: x < 0, self.tableau[-1]))) > 0:
+        while utils.get_neg_value_number(self.tableau[-1][:-1]) > 0:
 
             self.logger.info(('%d. Iteration' % i).center(40, '-'))
             self.base_exchange()
-            self.log_tableau()
+            utils.log_tableau(self)
             base_point = self.get_base_point()
             self.logger.info('Base point: %s' % base_point)
+            of_value = self.tableau[-1][-1]
+            self.logger.info('Objective function value: %d' % of_value)
             i += 1
 
         self.logger.info('Algorithm terminates'.center(40, '-'))
         self.logger.info('Optimal base point: ' + str(base_point))
-
-    def get_pivot_col_idx(self):
-        """
-        provide the pivot columns index
-        identify the lowest coefficient in the objective function
-        :return: pivot column index
-        """
-        return self.tableau[-1].index(min(self.tableau[-1]))
-
-    def get_pivot_row_idx(self):
-        """
-        provide the pivot rows index
-        calculate the quotient of pivot column coefficient and b, identify the minimum
-        :return:
-        """
-        quotients = [con[-1] / con[self.get_pivot_col_idx()] for con in self.tableau[:-1]]
-        # self.logger.info(quotients)
-        return quotients.index(min(quotients))
+        self.logger.info('Optimal objective function value: %d' % of_value)
 
     def base_exchange(self):
         """
@@ -249,6 +213,24 @@ class Simplex:
                 for j, a in enumerate(self.tableau[i]):
                     self.tableau[i][j] = a - (pc_a * self.tableau[pr_idx][j])
 
+    def get_pivot_col_idx(self):
+        """
+        provide the pivot columns index
+        identify the lowest coefficient in the objective function
+        :return: pivot column index
+        """
+        return self.tableau[-1].index(min(self.tableau[-1]))
+
+    def get_pivot_row_idx(self):
+        """
+        provide the pivot rows index
+        calculate the quotient of pivot column coefficient and b, identify the minimum
+        :return:
+        """
+        quotients = [con[-1] / con[self.get_pivot_col_idx()] for con in self.tableau[:-1]]
+        # self.logger.info(quotients)
+        return quotients.index(min(quotients))
+
     def get_base_point(self):
         """
         compose the the base point
@@ -256,30 +238,17 @@ class Simplex:
         """
         base_point = []
         col_count = len(self.tableau[0])
-        b_vector = self.get_col(col_count - 1)
+        b_vector = utils.get_tableau_col(self, col_count - 1)
 
         for col_idx in range(0, col_count - 1):
             # if column contains coefficients of a slack var
             if self.tableau[-1][col_idx] == 0:
-                col = self.get_col(col_idx)
+                col = utils.get_tableau_col(self, col_idx)
                 base_point.append(b_vector[col.index(max(col))])
             else:
                 base_point.append(0)
 
         return base_point
-
-    def get_col(self, index):
-        col = []
-        for row in self.tableau:
-            for idx, x in enumerate(row):
-                if idx == index:
-                    col.append(x)
-
-        return col
-
-    def log_tableau(self):
-        for row in self.tableau:
-            self.logger.info(row)
 
 
 if __name__ == "__main__":
