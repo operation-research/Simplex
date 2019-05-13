@@ -127,6 +127,10 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_b = [16, 24, 36]
         simplex.initial_c = [80, 60]
         # Lösung: 4.5 3 1 0 0; 540 | funktioniert
+    elif data_set == 8:  # studyflix.de
+        simplex.initial_A = [[-1, 2], [-1, -2], [-1, -1]]
+        simplex.initial_b = [-1, -4, 2]
+        simplex.initial_c = [-1, -1]
 
 
 def get_neg_value_number(l):

@@ -101,18 +101,27 @@ class Simplex:
                     exit()
 
             # Fall 2:
-            s_zeile = schlechte_zeilen[-1]  # Warum die Zeile?
+            min_num = schlechte_zeilen[0][-1]
+            s_zeile = schlechte_zeilen[0]
+            for row in schlechte_zeilen:
+                if row[-1] < min_num:
+                    s_zeile = row;
             g_zeile = gute_zeilen[-1]
 
-            # Kleinster Quotient b/apk0
-            sm_quot = self.tableau[:-1].index(s_zeile if (s_zeile[-1]/s_zeile[0]) < (g_zeile[-1]/g_zeile[0]) else g_zeile)
-
             # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
-            neg_var = None
-            for i, n in enumerate(s_zeile[:-1]):
-                if n < 0:
-                    neg_var = i
-                    break
+            neg_var = s_zeile[:-1].index(min(s_zeile[:-1]))
+            # for n in s_zeile[:-1]:
+            #     if n < 0:
+            #         neg_var = s_zeile[:-1].index(n)
+            #     break;
+
+            # Kleinster Quotient b/apk0
+            if (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] >= 0):
+                sm_quot = self.tableau[:-1].index(s_zeile if (s_zeile[-1]/s_zeile[neg_var]) < (g_zeile[-1]/g_zeile[neg_var]) else g_zeile)
+            elif (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] < 0):
+                sm_quot = self.tableau[:-1].index(s_zeile);
+            else:
+                sm_quot = self.tableau[:-1].index(g_zeile);
 
             # Nach x aufgelöst
             self.tableau[sm_quot] = [n / self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
@@ -155,14 +164,15 @@ class Simplex:
             # Basispunkt
             base_point = self.get_base_point()
 
-            for n in self.tableau[-1][:-1]:
-                if n <= 0:
+            
+            b_vector = [row[-1] for row in self.tableau[:-1]]
+            
+            for num in b_vector:
+                if num >= 0:
                     opt_reached = True
-                    for num in base_point:  # Kann man besser machen
-                        if num < 0:
-                            opt_reached = False
                 else:
                     opt_reached = False
+                    break;
 
     def phase_2(self):
         """
@@ -253,6 +263,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=1)
+    simplex = Simplex(data_set=8)
     simplex.run()
 
