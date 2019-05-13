@@ -101,61 +101,28 @@ class Simplex:
                     exit()
 
             # Fall 2:
-            min_num = schlechte_zeilen[0][-1]
+
+            #Pivotzeile bestimmen
             s_zeile = schlechte_zeilen[0]
             for row in schlechte_zeilen:
-                if row[-1] < min_num:
+                if row[-1] < s_zeile[-1]:
                     s_zeile = row
             g_zeile = gute_zeilen[-1]
 
-            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
-            neg_var = s_zeile[:-1].index(min(s_zeile[:-1]))
-            # for n in s_zeile[:-1]:
-            #     if n < 0:
-            #         neg_var = s_zeile[:-1].index(n)
-            #     break;
+            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile --> Pivotspalte
+            neg_var_idx = [s_zeile[:-1].index(n) for n in s_zeile[:-1] if n < 0]
+            neg_var_quots = [self.tableau[-1][i]/s_zeile[:-1][i] for i in neg_var_idx]
+            neg_var = neg_var_idx[neg_var_quots.index(max(neg_var_quots))]
 
-            # Kleinster Quotient b/apk0
-            # TODO: kommentieren
-            if (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] >= 0):
-                sm_quot = self.tableau[:-1].index(s_zeile if (s_zeile[-1]/s_zeile[neg_var]) < (g_zeile[-1]/g_zeile[neg_var]) else g_zeile)
-            elif (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] < 0):
-                sm_quot = self.tableau[:-1].index(s_zeile)
-            else:
-                sm_quot = self.tableau[:-1].index(g_zeile)
 
-            # Nach x aufgelöst
-            self.tableau[sm_quot] = [n / self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
+            # Kleinster Quotient b/apk0, um zu bestimmen welche Schlupfvariable die Basis verlassen muss
+            row_quots = [s_zeile[-1]/s_zeile[neg_var], g_zeile[-1]/g_zeile[neg_var]]
+            sm_quot = self.tableau[:-1].index(s_zeile)
+            if ((row_quots[1] < row_quots[0]) & (row_quots[1] > 0)):
+                self.tableau[:-1].index(g_zeile)
 
-            zw_zeile = [0] * len(self.tableau[sm_quot])
-            zw_zeile[-1] = self.tableau[sm_quot][-1]
-            for i,n in enumerate(self.tableau[sm_quot][:-1]):
-                if i != neg_var:
-                    zw_zeile[i] = zw_zeile[i] - self.tableau[sm_quot][i]
-
-            # Für X einsetzen in restliche Zeilen
-            for row in self.tableau:
-                if row != self.tableau[sm_quot]:
-                    zw_zeile1 = [num*row[neg_var] for num in zw_zeile]
-                    row[-1] = row[-1] - zw_zeile1[-1]
-                    row[neg_var] = 0
-                    for i,n in enumerate(row[:-1]):
-                        row[i] = row[i] + zw_zeile1[i]
-
-            # neg_var tritt in Basis ein
-            for n in range(len(self.initial_A)-1, len(self.tableau[0])-1):
-                if self.tableau[sm_quot][n] != 0:
-                    for row in self.tableau:
-                        swap = row[neg_var]
-                        row[neg_var] = row[n]
-                        row[n] = swap
-                    swap_index = n    
-                    break
-            
-            # Variablentausch
-            var = self.vars[neg_var]
-            self.vars[neg_var] = self.vars[n]
-            self.vars[n] = var
+            # Basiswechsel durchführen, damit NBV in Basis eintritt und BV die Basis verlässt
+            self.base_exchange(neg_var, sm_quot)
 
             self.logger.info(self.vars)
             for row in self.tableau:
@@ -164,7 +131,8 @@ class Simplex:
             self.logger.info("\n")
             # Basispunkt
             base_point = self.get_base_point()
-            # TODO: basepoint loggen
+            self.logger.info(base_point)
+            self.logger.info("\n")
 
     def phase_2(self):
         """
@@ -254,6 +222,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex()
+    simplex = Simplex(data_set=2)
     simplex.run()
 
