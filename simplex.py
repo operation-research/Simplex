@@ -87,9 +87,8 @@ class Simplex:
         :return:
         """
         self.logger.info('Start phase 1'.center(60, '*'))
-        opt_reached = False
 
-        while opt_reached is False:
+        while utils.get_neg_value_number([row[-1] for row in self.tableau[:-1]]) > 0:
 
             # GZSZ
             gute_zeilen = [row for row in self.tableau[:-1] if row[-1] >= 0]
@@ -106,7 +105,7 @@ class Simplex:
             s_zeile = schlechte_zeilen[0]
             for row in schlechte_zeilen:
                 if row[-1] < min_num:
-                    s_zeile = row;
+                    s_zeile = row
             g_zeile = gute_zeilen[-1]
 
             # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile
@@ -117,12 +116,13 @@ class Simplex:
             #     break;
 
             # Kleinster Quotient b/apk0
+            # TODO: kommentieren
             if (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] >= 0):
                 sm_quot = self.tableau[:-1].index(s_zeile if (s_zeile[-1]/s_zeile[neg_var]) < (g_zeile[-1]/g_zeile[neg_var]) else g_zeile)
             elif (s_zeile[-1]/s_zeile[neg_var] >= 0) & (g_zeile[-1]/g_zeile[neg_var] < 0):
-                sm_quot = self.tableau[:-1].index(s_zeile);
+                sm_quot = self.tableau[:-1].index(s_zeile)
             else:
-                sm_quot = self.tableau[:-1].index(g_zeile);
+                sm_quot = self.tableau[:-1].index(g_zeile)
 
             # Nach x aufgelöst
             self.tableau[sm_quot] = [n / self.tableau[sm_quot][neg_var] for n in self.tableau[sm_quot]]
@@ -164,16 +164,7 @@ class Simplex:
             self.logger.info("\n")
             # Basispunkt
             base_point = self.get_base_point()
-
-            
-            b_vector = [row[-1] for row in self.tableau[:-1]]
-            
-            for num in b_vector:
-                if num >= 0:
-                    opt_reached = True
-                else:
-                    opt_reached = False
-                    break;
+            # TODO: basepoint loggen
 
     def phase_2(self):
         """
@@ -192,7 +183,7 @@ class Simplex:
         while utils.get_neg_value_number(self.tableau[-1][:-1]) > 0:
 
             self.logger.info(('%d. Iteration' % i).center(40, '-'))
-            self.base_exchange()
+            self.base_exchange(self.get_pivot_col_idx(), self.get_pivot_row_idx())
             utils.log_tableau(self)
             base_point = self.get_base_point()
             self.logger.info('Base point: %s' % base_point)
@@ -204,14 +195,14 @@ class Simplex:
         self.logger.info('Optimal base point: ' + str(base_point))
         self.logger.info('Optimal objective function value: %d' % of_value)
 
-    def base_exchange(self):
+    def base_exchange(self, pc_idx, pr_idx):
         """
         perform a base exchange
+        :param pc_idx: pivot column index
+        :param pr_idx: pivot row index
         :return:
         """
-        pc_idx = self.get_pivot_col_idx()
-        self.logger.info('Pivot column: %d' % pc_idx)
-        pr_idx = self.get_pivot_row_idx()
+        self.logger.info('Pivot column: %d' % pc_idx)#
         self.logger.info('Pivot row: %d' % pr_idx)
         pe = self.tableau[pr_idx][pc_idx]
         self.logger.info('Pivot element: %d' % pe)
@@ -264,6 +255,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=6)
+    simplex = Simplex()
     simplex.run()
 
