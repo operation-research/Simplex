@@ -107,30 +107,25 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_b = [24, 24, 36]
         simplex.initial_c = [500, 800]
         # Lösung: 1.5 4.5 7.5 0 0; 4350 | funktioniert
-    elif data_set == 4:  # Marie (degeneriert)
-        simplex.initial_A = [[4, 3], [4, 1], [4, 2]]
-        simplex.initial_b = [12, 8, 8]
-        simplex.initial_c = [2, 1]
-        # Lösung: 2 0 4 0 0; -4 | funktioniert nicht ganz -> #TODO anschauen
-    elif data_set == 5:  # Aller erstes Beispiel
-        simplex.initial_A = [[-1, 1], [2, -3], [2, 3]]
-        simplex.initial_b = [2, 3, 12]
-        simplex.initial_c = [3, 5]
-        # Lösung: 1.2 3.2 0 10.2 0; -19.6 | funktioniert nicht ganz -> #TODO anschauen
-    elif data_set == 6:  # Fadi & Marius
+    elif data_set == 4:  # Fadi & Marius
         simplex.initial_A = [[2, 1], [4, 5], [6, 15]]
         simplex.initial_b = [80, 200, 450]
         simplex.initial_c = [16, 32]
         # Lösung: 25 20 10 0 0; 1040 | funktioniert
-    elif data_set == 7:  # studyflix.de
+    elif data_set == 5:  # studyflix.de
         simplex.initial_A = [[2, 2], [4, 2], [4, 6]]
         simplex.initial_b = [16, 24, 36]
         simplex.initial_c = [80, 60]
         # Lösung: 4.5 3 1 0 0; 540 | funktioniert
-    elif data_set == 8:  # studyflix.de
+    elif data_set == 6:  # ingenieur kurse.de unallowed
         simplex.initial_A = [[-1, 2], [-1, -2], [-1, -1]]
         simplex.initial_b = [-1, -4, 2]
         simplex.initial_c = [-1, -1]
+    elif data_set == 7:  # Uni Wien
+        simplex.initial_A = [[2, 1], [1, 1]]
+        simplex.initial_b = [8, 6]
+        simplex.initial_c = [3, 2]
+        # Lösung: 2 4 0 0; 14 | funktioniert
 
 
 def get_neg_value_number(l):

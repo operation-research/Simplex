@@ -74,7 +74,8 @@ class Simplex:
         runs the simplex algorithm
         :return:
         """
-        if len(list(filter(lambda x: x < 0, self.initial_b))) > 0:
+        # if base point is not allowed
+        if utils.get_neg_value_number(self.initial_b) > 0:
             self.phase_1()
         else:
             self.phase_2()
@@ -263,6 +264,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=8)
+    simplex = Simplex(data_set=6)
     simplex.run()
 
