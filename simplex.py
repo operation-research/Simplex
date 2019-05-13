@@ -33,11 +33,11 @@ class Simplex:
 
         # config logging
         logging.basicConfig(level=logging.INFO)
-        self.logger.info("Initialize Simplex".center(60, '*'))
 
         # initialize and prepare data
         utils.init_simplex_data(self, data_set)
         self.add_slack_vars()
+        self.logger.info("Initialize Simplex".center(60, '*'))
         self.init_tableau()
 
     def init_tableau(self):
@@ -244,7 +244,7 @@ class Simplex:
         for col_idx in range(0, max_col_idx):
             # if column contains coefficients of a slack var
             if self.tableau[-1][col_idx] == 0:
-                col = [row[max_col_idx] for row in self.tableau[:-1]]
+                col = [row[col_idx] for row in self.tableau[:-1]]
                 base_point.append(b_vector[col.index(max(col))])
             else:
                 base_point.append(0)
@@ -254,6 +254,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=3)
+    simplex = Simplex()
     simplex.run()
 
