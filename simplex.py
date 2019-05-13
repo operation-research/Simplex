@@ -230,7 +230,6 @@ class Simplex:
         :return:
         """
         quotients = [con[-1] / con[self.get_pivot_col_idx()] for con in self.tableau[:-1]]
-        # self.logger.info(quotients)
         return quotients.index(min(quotients))
 
     def get_base_point(self):
@@ -239,13 +238,13 @@ class Simplex:
         :return: base point as list
         """
         base_point = []
-        col_count = len(self.tableau[0])
-        b_vector = utils.get_tableau_col(self, col_count - 1)
+        max_col_idx = len(self.tableau[0]) - 1
+        b_vector = [row[max_col_idx] for row in self.tableau[:-1]]
 
-        for col_idx in range(0, col_count - 1):
+        for col_idx in range(0, max_col_idx):
             # if column contains coefficients of a slack var
             if self.tableau[-1][col_idx] == 0:
-                col = utils.get_tableau_col(self, col_idx)
+                col = [row[max_col_idx] for row in self.tableau[:-1]]
                 base_point.append(b_vector[col.index(max(col))])
             else:
                 base_point.append(0)
@@ -255,6 +254,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex()
+    simplex = Simplex(data_set=3)
     simplex.run()
 
