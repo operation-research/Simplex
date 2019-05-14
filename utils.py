@@ -98,6 +98,10 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_A = [[-1, 2], [-1, -2], [-1, -1]]
         simplex.initial_b = [-1, -4, 2]
         simplex.initial_c = [-1, -1]
+    elif data_set == 10:  # ingenieur kurse.de
+        simplex.initial_A = [[-1, -1], [-3, -1], [1, 1]]
+        simplex.initial_b = [-8, -12, 10]
+        simplex.initial_c = [2, 1]
 
     # Phase 2
 
@@ -126,6 +130,11 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_b = [8, 6]
         simplex.initial_c = [3, 2]
         # Lösung: 2 4 0 0; 14
+    elif data_set == 8:
+        simplex.initial_A = [[-2, 1], [-5, 1]]
+        simplex.initial_b = [8, 6]
+        simplex.initial_c = [1, -2]
+        # Lösung: nicht auf zul. Menge minimierbar
 
 
 def get_neg_value_number(l):
@@ -143,5 +152,6 @@ def log_tableau(simplex):
     :param simplex: simplex
     :return:
     """
+    simplex.logger.info(simplex.vars)
     for row in simplex.tableau:
         simplex.logger.info(row)
