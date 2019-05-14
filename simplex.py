@@ -111,7 +111,8 @@ class Simplex:
                     s_zeile = row
             g_zeile = gute_zeilen[-1]
 
-            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile --> Pivotspalte
+            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile --> Pivotspalte (Dafür wird jeweils Quotient gezogen von Koeff. der NBV und Koeff. der Var aus Zielfunktion gezogen)
+            # Dadurch erhalten wir auch Pivotelement
             neg_var_idx = [s_zeile[:-1].index(n) for n in s_zeile[:-1] if n < 0]
             neg_var_quots = [self.tableau[-1][i]/s_zeile[:-1][i] for i in neg_var_idx]
             neg_var = neg_var_idx[neg_var_quots.index(max(neg_var_quots))]
