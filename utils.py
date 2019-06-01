@@ -130,11 +130,20 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_b = [8, 6]
         simplex.initial_c = [3, 2]
         # Lösung: 2 4 0 0; 14
+
+    # Spezialfälle
+
     elif data_set == 8:
         simplex.initial_A = [[-2, 1], [-5, 1]]
         simplex.initial_b = [8, 6]
         simplex.initial_c = [1, -2]
         # Lösung: nicht auf zul. Menge minimierbar
+
+    elif data_set == 9:
+        simplex.initial_A = [[3, 4], [1, 2]]
+        simplex.initial_b = [3, -3]
+        simplex.initial_c = [-6, 1]
+        # Lösung: leere Lösungsmenge
 
 
 def get_neg_value_number(l):

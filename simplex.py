@@ -74,12 +74,25 @@ class Simplex:
         runs the simplex algorithm
         :return:
         """
+        self.check_empty_solution()
 
         # if base point is not allowed
         if utils.get_neg_value_number(self.initial_b) > 0:
             self.phase_1()
 
         self.phase_2()
+
+    def check_empty_solution(self):
+        """
+        checks if no solution exists because of bad constraints
+        :return:
+        """
+        for idx, con in enumerate(self.tableau[:-1]):
+            # mit nur positiven Koeffizienten und der Nichtnegativitätsbedingung kann eine Nebenbedingung mit negativem
+            # b Wert nie erfüllt werden
+            if utils.get_neg_value_number(con[:-1]) is 0 and con[-1] < 0:
+                self.logger.info("Leere Lösungsmenge aufgrund von %d. Nebenbedingung" % (idx + 1))
+                exit()
 
     def phase_1(self):
         """
@@ -111,7 +124,8 @@ class Simplex:
                     s_zeile = row
             g_zeile = gute_zeilen[-1]
 
-            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile --> Pivotspalte (Dafür wird jeweils Quotient gezogen von Koeff. der NBV und Koeff. der Var aus Zielfunktion gezogen)
+            # Wähle Koeff. mit neg. Vorzeichen aus schlechten Zeile --> Pivotspalte (Dafür wird jeweils Quotient gezogen
+            # von Koeff. der NBV und Koeff. der Var aus Zielfunktion gezogen)
             # Dadurch erhalten wir auch Pivotelement
             neg_var_idx = [s_zeile[:-1].index(n) for n in s_zeile[:-1] if n < 0]
             neg_var_quots = [self.tableau[-1][i]/s_zeile[:-1][i] for i in neg_var_idx]
@@ -240,6 +254,6 @@ class Simplex:
 
 if __name__ == "__main__":
 
-    simplex = Simplex(data_set=10)
+    simplex = Simplex(data_set=9)
     simplex.run()
 
