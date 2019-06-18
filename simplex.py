@@ -177,26 +177,9 @@ class Simplex:
         # Mindestens ein negativer Wert in der ZF Zeile gefunden, sonst kann nicht mehr weiter minimiert werden
         while utils.get_neg_value_number(self.tableau[-1][:-1]) > 0:
 
-            # Pivot Spalte berechnen
-            if self.bland:
-                # Bland'sche Regel besagt eintretende und austretende Variable ist immer diejenige mit
-                # kleinsten Index
-                base_vars_idx = [idx for idx, value in enumerate(self.tableau[-1][:-1]) if value < 0]
-                pc_idx = min(base_vars_idx)
-
-            else:
-                pc_idx = self.get_pivot_col_idx()
-
+            pc_idx = self.get_pivot_col_idx()
             self.check_limited_minimum(pc_idx)
-
-            # Pivot Zeile berechnen
-            if self.bland:
-                not_base_vars = [row[pc_idx] for row in self.tableau[:-1]]
-                not_base_vars_idx = [not_base_vars.index(num) for num in not_base_vars if num > 0]
-                not_base_vars_quot = [self.tableau[:-1][idx][-1] / not_base_vars[idx] for idx in not_base_vars_idx]
-                pr_idx = not_base_vars_idx[not_base_vars_quot.index(min(not_base_vars_quot))]
-            else:
-                pr_idx = self.get_pivot_row_idx(pc_idx)
+            pr_idx = self.get_pivot_row_idx(pc_idx)
 
             # Basiswechsel durchführen
             self.logger.info(('%d. Iteration' % i).center(40, '-'))
@@ -243,10 +226,16 @@ class Simplex:
     def get_pivot_col_idx(self):
         """
         provide the pivot columns index
-        identify the lowest coefficient in the objective function
+        identify the lowest coefficient in the objective function or uses blands rule
         :return: pivot column index
         """
-        return self.tableau[-1].index(min(self.tableau[-1]))
+        if self.bland:
+            # Bland'sche Regel besagt eintretende und austretende Variable ist immer diejenige mit
+            # kleinsten Index
+            base_vars_idx = [idx for idx, value in enumerate(self.tableau[-1][:-1]) if value < 0]
+            return min(base_vars_idx)
+        else:
+            return self.tableau[-1].index(min(self.tableau[-1]))
 
     def get_pivot_row_idx(self, pc_idx):
         """
@@ -255,8 +244,14 @@ class Simplex:
         :param pc_idx: pivot column index
         :return:
         """
-        quotients = [con[-1] / con[pc_idx] if con[pc_idx] > 0 else None for con in self.tableau[:-1]]
-        return quotients.index(min(list(filter(lambda x: x is not None, quotients))))
+        if self.bland:
+            not_base_vars = [row[pc_idx] for row in self.tableau[:-1]]
+            not_base_vars_idx = [not_base_vars.index(num) for num in not_base_vars if num > 0]
+            not_base_vars_quot = [self.tableau[:-1][idx][-1] / not_base_vars[idx] for idx in not_base_vars_idx]
+            return not_base_vars_idx[not_base_vars_quot.index(min(not_base_vars_quot))]
+        else:
+            quotients = [con[-1] / con[pc_idx] if con[pc_idx] > 0 else None for con in self.tableau[:-1]]
+            return quotients.index(min(list(filter(lambda x: x is not None, quotients))))
 
     def get_base_point(self):
         """
