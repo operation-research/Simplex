@@ -145,11 +145,11 @@ def simplex_dev_data(simplex, data_set):
         simplex.initial_c = [-6, 1]
         # Lösung: leere Lösungsmenge
 
-    elif data_set == 11:
+    elif data_set == 11:  # degeneriert
         simplex.initial_A = [[0.5, -5.5, -2.5, 9], [0.5, -1.5, -0.5, 1], [1, 0, 0, 0]]
         simplex.initial_b = [0, 0, 1]
         simplex.initial_c = [10, -57, -9, -24]
-        # Lösung: leere Lösungsmenge
+        # Lösung: ?
 
 
 def get_neg_value_number(l):

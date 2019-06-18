@@ -10,6 +10,7 @@ class Simplex:
     Simplex algorithm
 
     Attributes:
+        bland(Boolean): bland rule flag
         data_set(int): number of dev data set
         logger(Logger): logger
         tableau([]): simplex tableau
@@ -18,11 +19,12 @@ class Simplex:
         initial_c([]): initial c vector
     """
 
-    def __init__(self, data_set=None):
+    def __init__(self, bland=False, data_set=None):
         """
         setup object
         :param data_set: number of dev data set
         """
+        self.bland = bland
         self.data_set = data_set
         self.logger = logging.getLogger(self.__class__.__name__)
         self.tableau = None
@@ -59,17 +61,17 @@ class Simplex:
         self.initial_c += [0] * (len(self.initial_A) + 1)
 
         for idx, n in enumerate(self.initial_A[0]):
-            self.vars.append("x" + str(idx+1))
+            self.vars.append("x" + str(idx + 1))
 
         for idx, constraint in enumerate(self.initial_A):
             slack_var = [0] * len(self.initial_A)
             slack_var[idx] = 1
             self.initial_A[idx] += slack_var
-            self.vars.append("u" + str(idx+1))
-        
+            self.vars.append("u" + str(idx + 1))
+
         self.vars.append("b")
 
-    def run(self, bland_flag):
+    def run(self):
         """
         runs the simplex algorithm
         :return:
@@ -80,7 +82,7 @@ class Simplex:
         if utils.get_neg_value_number(self.initial_b) > 0:
             self.phase_1()
 
-        self.phase_2(bland_flag)
+        self.phase_2()
 
     def check_empty_solution(self):
         """
@@ -93,6 +95,18 @@ class Simplex:
             if utils.get_neg_value_number(con[:-1]) is 0 and con[-1] < 0:
                 self.logger.info("Leere Lösungsmenge aufgrund von %d. Nebenbedingung" % (idx + 1))
                 exit()
+
+    def check_limited_minimum(self, pc_idx):
+        """
+        Check whether a minimum can be assumed for a permitted quantity
+        :param pc_idx: pivot column index
+        :return:
+        """
+        pc_values = [con[pc_idx] for con in self.tableau[:-1]]
+        if utils.get_neg_value_number(pc_values) is len(pc_values):
+            self.logger.info('Algorithm terminates'.center(40, '-'))
+            self.logger.info('Minimum is not limited')
+            exit()
 
     def phase_1(self):
         """
@@ -128,11 +142,11 @@ class Simplex:
             # von Koeff. der NBV und Koeff. der Var aus Zielfunktion gezogen)
             # Dadurch erhalten wir auch Pivotelement
             neg_var_idx = [s_zeile[:-1].index(n) for n in s_zeile[:-1] if n < 0]
-            neg_var_quots = [self.tableau[-1][i]/s_zeile[:-1][i] for i in neg_var_idx]
+            neg_var_quots = [self.tableau[-1][i] / s_zeile[:-1][i] for i in neg_var_idx]
             neg_var = neg_var_idx[neg_var_quots.index(max(neg_var_quots))]
 
             # Kleinster Quotient b/apk0, um zu bestimmen welche Schlupfvariable die Basis verlassen muss (Pivotzeile)
-            row_quots = [s_zeile[-1]/s_zeile[neg_var], g_zeile[-1]/g_zeile[neg_var]]
+            row_quots = [s_zeile[-1] / s_zeile[neg_var], g_zeile[-1] / g_zeile[neg_var]]
             sm_quot = self.tableau[:-1].index(s_zeile)
             if ((row_quots[1] < row_quots[0]) & (row_quots[1] > 0)):
                 self.tableau[:-1].index(g_zeile)
@@ -147,7 +161,7 @@ class Simplex:
             self.logger.info(base_point)
             i += 1
 
-    def phase_2(self, bland_flag):
+    def phase_2(self):
         """
         run the second phase of the algorithm
         <description>
@@ -162,28 +176,27 @@ class Simplex:
 
         # Mindestens ein negativer Wert in der ZF Zeile gefunden, sonst kann nicht mehr weiter minimiert werden
         while utils.get_neg_value_number(self.tableau[-1][:-1]) > 0:
-            
-            if(bland_flag == True):
+
+            # Pivot Spalte berechnen
+            if self.bland:
                 # Bland'sche Regel besagt eintretende und austretende Variable ist immer diejenige mit
                 # kleinsten Index
-                base_vars_idx = [idx for idx, value in enumerate(self.tableau[-1][:-1]) if value < 0 ]
-                pc_idx = min(base_vars_idx) 
-                
+                base_vars_idx = [idx for idx, value in enumerate(self.tableau[-1][:-1]) if value < 0]
+                pc_idx = min(base_vars_idx)
 
+            else:
+                pc_idx = self.get_pivot_col_idx()
+
+            self.check_limited_minimum(pc_idx)
+
+            # Pivot Zeile berechnen
+            if self.bland:
                 not_base_vars = [row[pc_idx] for row in self.tableau[:-1]]
                 not_base_vars_idx = [not_base_vars.index(num) for num in not_base_vars if num > 0]
-                not_base_vars_quot = [self.tableau[:-1][idx][-1]/not_base_vars[idx] for idx in not_base_vars_idx]
-
+                not_base_vars_quot = [self.tableau[:-1][idx][-1] / not_base_vars[idx] for idx in not_base_vars_idx]
                 pr_idx = not_base_vars_idx[not_base_vars_quot.index(min(not_base_vars_quot))]
             else:
-                # Prüfen ob Minimum auf zulässiger Menge angenommen werden kann
-                # pc_idx = self.get_pivot_col_idx()
-                # Prüfen ob der Wert der ZF Zeile negativ ist wird schon in der while Bedingung gemacht
-                pc_values = [con[pc_idx] for con in self.tableau[:-1]]
-                if utils.get_neg_value_number(pc_values) is len(pc_values):
-                    self.logger.info('Algorithm terminates'.center(40, '-'))
-                    self.logger.info('Minimum is not limited')
-                    exit()
+                pr_idx = self.get_pivot_row_idx(pc_idx)
 
             # Basiswechsel durchführen
             self.logger.info(('%d. Iteration' % i).center(40, '-'))
@@ -195,7 +208,6 @@ class Simplex:
             of_value = self.tableau[-1][-1]
             self.logger.info('New objective function value: %f' % of_value)
             i += 1
-            
 
         # Algorithmus kann ZF Wert nicht mehr weiter minimieren
         self.logger.info('Algorithm terminates'.center(40, '-'))
@@ -215,7 +227,6 @@ class Simplex:
         pe = self.tableau[pr_idx][pc_idx]
         self.logger.info('Pivot element: %d' % pe)
         self.logger.info('Run base exchange')
-        
 
         # Werte der Pivot Zeile durch Pivotelement teilen um Variable des Pivot Elements in die Basis aufzunehmen
         self.tableau[pr_idx] = [a / pe for a in self.tableau[pr_idx]]
@@ -269,8 +280,7 @@ class Simplex:
 
 
 if __name__ == "__main__":
-    bland_flag = True
-
-    simplex = Simplex(data_set=11)
-    simplex.run(bland_flag)
+    simplex = Simplex(bland=True,
+                      data_set=11)
+    simplex.run()
 
